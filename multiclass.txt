@@ -1,0 +1,88 @@
+# Multiclass Classification Using Deep Neural Network on MNIST Dataset
+# B 2B
+# Install TensorFlow
+!pip install tensorflow -q
+
+# Import libraries
+import numpy as np
+
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.utils import to_categorical
+
+# =========================
+# LOAD DATASET
+# =========================
+
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+# =========================
+# RESHAPE DATA
+# =========================
+
+x_train = x_train.reshape(60000, 784).astype('float32') / 255
+x_test = x_test.reshape(10000, 784).astype('float32') / 255
+
+# =========================
+# ONE HOT ENCODING
+# =========================
+
+num_classes = 10
+
+y_train = to_categorical(y_train, num_classes)
+y_test = to_categorical(y_test, num_classes)
+
+# =========================
+# CREATE MODEL
+# =========================
+
+model = Sequential()
+
+model.add(Dense(128, activation='relu', input_shape=(784,)))
+model.add(Dropout(0.2))
+
+model.add(Dense(64, activation='relu'))
+model.add(Dropout(0.2))
+
+model.add(Dense(num_classes, activation='softmax'))
+
+# =========================
+# COMPILE MODEL
+# =========================
+
+model.compile(
+    optimizer='adam',
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+# =========================
+# TRAIN MODEL
+# =========================
+
+model.fit(
+    x_train,
+    y_train,
+    batch_size=128,
+    epochs=5,
+    validation_split=0.1,
+    verbose=1
+)
+
+# =========================
+# EVALUATE MODEL
+# =========================
+
+loss, accuracy = model.evaluate(x_test, y_test)
+
+print("\nTest Loss :", loss)
+print("Test Accuracy :", accuracy)
+
+# =========================
+# PREDICT SAMPLE
+# =========================
+
+prediction = model.predict(x_test[:1])
+
+print("\nPredicted Digit :", np.argmax(prediction))
