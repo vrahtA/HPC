@@ -1,0 +1,125 @@
+# Colorizing Old Black & White Images Using CNN
+# BETTER VISUAL OUTPUT VERSION FOR COLAB
+
+# Install TensorFlow
+!pip install tensorflow -q
+
+# =========================
+# IMPORT LIBRARIES
+# =========================
+
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.layers import UpSampling2D
+from tensorflow.keras.layers import InputLayer
+
+from tensorflow.keras.datasets import cifar10
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# =========================
+# LOAD REAL IMAGE
+# =========================
+
+(x_train, _), (_, _) = cifar10.load_data()
+
+# Take one sample image
+img = x_train[0]
+
+# =========================
+# CONVERT TO GRAYSCALE
+# =========================
+
+img_gray = tf.image.rgb_to_grayscale(img)
+
+# Normalize image
+img_gray = img_gray.numpy() / 255.0
+
+# Add batch dimension
+img_gray = np.expand_dims(img_gray, axis=0)
+
+print("Input Shape :", img_gray.shape)
+
+# =========================
+# CREATE CNN MODEL
+# =========================
+
+model = Sequential()
+
+model.add(InputLayer(input_shape=(32,32,1)))
+
+model.add(Conv2D(
+    32,
+    (3,3),
+    activation='relu',
+    padding='same'
+))
+
+model.add(Conv2D(
+    64,
+    (3,3),
+    activation='relu',
+    padding='same'
+))
+
+model.add(UpSampling2D((1,1)))
+
+model.add(Conv2D(
+    32,
+    (3,3),
+    activation='relu',
+    padding='same'
+))
+
+# Output RGB image
+model.add(Conv2D(
+    3,
+    (3,3),
+    activation='sigmoid',
+    padding='same'
+))
+
+# =========================
+# MODEL SUMMARY
+# =========================
+
+model.summary()
+
+# =========================
+# COMPILE MODEL
+# =========================
+
+model.compile(
+    optimizer='adam',
+    loss='mse'
+)
+
+# =========================
+# COLORIZE IMAGE
+# =========================
+
+img_colorized = model.predict(img_gray)
+
+print("\nOutput Shape :", img_colorized.shape)
+
+# =========================
+# DISPLAY IMAGES
+# =========================
+
+plt.figure(figsize=(10,5))
+
+# Grayscale image
+plt.subplot(1,2,1)
+plt.imshow(img_gray[0].squeeze(), cmap='gray')
+plt.title("Black & White Image")
+plt.axis('off')
+
+# Colorized image
+plt.subplot(1,2,2)
+plt.imshow(img_colorized[0])
+plt.title("Colorized Image")
+plt.axis('off')
+
+plt.show()
